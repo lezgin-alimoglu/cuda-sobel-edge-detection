@@ -4,16 +4,18 @@ This project implements a custom CUDA kernel for Sobel edge detection, providing
 
 ## Project Structure
 
-cuda-project/
+```
+cuda-sobel-edge-detection/
 ├── src/
-│ ├── sobel_kernel.cu # Custom CUDA kernels for Sobel, Gaussian blur, RGB to Gray
-│ ├── custom_sobel.cpp # Main application using custom kernels
-│ ├── main.cpp # CPU-based Sobel implementation (for comparison)
-│ └── sobel.cu # OpenCV CUDA-based Sobel implementation
-├── CMakeLists.txt # CMake build configuration
-├── Makefile # Alternative Makefile build system
-└── README.md # This file
-
+│   ├── sobel_kernel.cu      # Custom CUDA kernels for Sobel, Gaussian blur, RGB to Gray
+│   ├── custom_sobel.cpp     # Main application using custom kernels
+│   ├── main.cpp             # CPU-based Sobel implementation (for comparison)
+│   └── sobel.cu             # OpenCV CUDA-based Sobel implementation
+├── CMakeLists.txt           # CMake build configuration
+├── Makefile                 # Alternative Makefile build system
+├── LICENSE                  # Project license (MIT)
+└── README.md                # Project documentation
+```
 
 ## Features
 
