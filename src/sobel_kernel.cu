@@ -7,7 +7,7 @@ using namespace std;
 
 // CUDA kernel for Sobel edge detection
 __global__ void sobelKernel(const unsigned char* input, unsigned char* output, 
-                           int width, int height) {
+                           int width, int height, int threshold) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     
@@ -39,7 +39,14 @@ __global__ void sobelKernel(const unsigned char* input, unsigned char* output,
     }
     
     // Calculate magnitude
-    int magnitude = (int)sqrtf((float)(gx * gx + gy * gy));
+    int magnitude = abs(gx) + abs(gy);
+
+    // Check the threshold
+    if (magnitude < threshold) {
+        magnitude = 0;
+    } else {
+        magnitude = 255;
+    }
     
     // Clamp to 0-255 range
     magnitude = min(255, max(0, magnitude));
@@ -68,16 +75,57 @@ __global__ void rgbToGrayKernel(const unsigned char* input, unsigned char* outpu
     output[y * width + x] = gray;
 }
 
+__global__ void gaussianBlurKernel(const unsigned char* input, unsigned char* output,
+                                   int width, int height) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= width || y >= height) return;
+
+    const int kernel[3][3] = {
+        {1, 2, 1},
+        {2, 4, 2},
+        {1, 2, 1}
+    };
+
+    int sum = 0;
+    int weight = 0;
+
+    for (int i = -1; i <= 1; ++i) {
+        for (int j = -1; j <= 1; ++j) {
+            int nx = x + j;
+            int ny = y + i;
+
+            if (nx < 0) nx = 0;
+            if (nx >= width) nx = width - 1;
+            if (ny < 0) ny = 0;
+            if (ny >= height) ny = height - 1;
+
+            int pixel = input[ny * width + nx];
+            int w = kernel[i + 1][j + 1];
+
+            sum += pixel * w;
+            weight += w;
+        }
+    }
+
+    output[y * width + x] = sum / weight;
+}
+
+
 // Host function to process image with CUDA
 extern "C" void processImageWithCUDA(const Mat& input, Mat& output) {
     int width = input.cols;
     int height = input.rows;
+    int threshold = 100;
     
     // Allocate device memory
-    unsigned char *d_input, *d_gray, *d_output;
+    unsigned char *d_input, *d_gray, *d_output, *d_blur;
     size_t inputSize = width * height * 3 * sizeof(unsigned char); // BGR
     size_t graySize = width * height * sizeof(unsigned char);
-    
+    size_t blurSize = width * height * sizeof(unsigned char);
+
+    cudaMalloc(&d_blur, blurSize);
     cudaMalloc(&d_input, inputSize);
     cudaMalloc(&d_gray, graySize);
     cudaMalloc(&d_output, graySize);
@@ -91,9 +139,12 @@ extern "C" void processImageWithCUDA(const Mat& input, Mat& output) {
     
     // Convert to grayscale
     rgbToGrayKernel<<<gridSize, blockSize>>>(d_input, d_gray, width, height);
+
+    // Apply Gaussian blur
+    gaussianBlurKernel<<<gridSize, blockSize>>>(d_gray, d_blur, width, height);
     
     // Apply Sobel filter
-    sobelKernel<<<gridSize, blockSize>>>(d_gray, d_output, width, height);
+    sobelKernel<<<gridSize, blockSize>>>(d_blur, d_output, width, height, threshold);
     
     // Copy result back to host
     output = Mat(height, width, CV_8UC1);
@@ -103,7 +154,7 @@ extern "C" void processImageWithCUDA(const Mat& input, Mat& output) {
     cudaFree(d_input);
     cudaFree(d_gray);
     cudaFree(d_output);
-    
+    cudaFree(d_blur);
     // Check for CUDA errors
     cudaError_t error = cudaGetLastError();
     if (error != cudaSuccess) {
