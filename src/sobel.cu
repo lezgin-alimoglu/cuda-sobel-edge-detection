@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     int frame_width = static_cast<int>(cap.get(CAP_PROP_FRAME_WIDTH));
     int frame_height = static_cast<int>(cap.get(CAP_PROP_FRAME_HEIGHT));
     int fps = static_cast<int>(cap.get(CAP_PROP_FPS));
-    if (fps == 0) fps = 30;
+    if (fps == 0) fps = 35;
 
     VideoWriter writer;
     if (save_video) {

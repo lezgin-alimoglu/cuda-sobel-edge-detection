@@ -114,10 +114,9 @@ __global__ void gaussianBlurKernel(const unsigned char* input, unsigned char* ou
 
 
 // Host function to process image with CUDA
-extern "C" void processImageWithCUDA(const Mat& input, Mat& output) {
+extern "C" void processImageWithCUDA(const Mat& input, Mat& output, int threshold) {
     int width = input.cols;
     int height = input.rows;
-    int threshold = 100;
     
     // Allocate device memory
     unsigned char *d_input, *d_gray, *d_output, *d_blur;

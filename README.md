@@ -23,6 +23,7 @@ cuda-sobel-edge-detection/
 - **RGB to Grayscale Conversion**: GPU-accelerated color conversion
 - **Gaussian Blur**: Reduces noise before applying Sobel
 - **Thresholding**: Adjustable threshold value for clearer edge maps
+- **Real-Time Threshold Trackbar**: Instantly adjust edge detection threshold with an interactive slider
 - **Performance Monitoring**: Real-time FPS display
 - **Video Support**: Camera input and video file processing
 - **Recording Capability**: Save processed video output
@@ -100,6 +101,9 @@ nvcc src/sobel.cu -o sobel -I/usr/local/include/opencv4 -L/usr/local/lib \
 # Run with video file and save output
 ./custom_sobel video.mp4 save
 ```
+
+**Tip:**
+- When running `custom_sobel`, use the "Threshold" trackbar in the "Custom CUDA Sobel" window to adjust edge sensitivity in real time.
 
 ### Using Makefile Targets
 

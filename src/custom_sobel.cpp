@@ -3,10 +3,13 @@
 #include <opencv2/opencv.hpp>
 
 // Include the CUDA kernel functions
-extern "C" void processImageWithCUDA(const cv::Mat& input, cv::Mat& output);
+extern "C" void processImageWithCUDA(const cv::Mat& input, cv::Mat& output, int threshold);
 
 using namespace cv;
 using namespace std;
+
+int threshold_value = 100; // Default threshold value
+int max_threshold = 255;
 
 int main(int argc, char** argv) {
     auto start = chrono::high_resolution_clock::now();
@@ -56,6 +59,9 @@ int main(int argc, char** argv) {
     cout << "Custom CUDA Sobel Edge Detection" << endl;
     cout << "Press 'q' to quit." << endl;
 
+    namedWindow("Custom CUDA Sobel", WINDOW_NORMAL);
+    createTrackbar("Threshold", "Custom CUDA Sobel", &threshold_value, max_threshold);
+
     while (true) {
         frame_count++;
         auto current_time = chrono::high_resolution_clock::now();
@@ -72,7 +78,7 @@ int main(int argc, char** argv) {
         if (frame.empty()) break;
 
         // Process frame with custom CUDA kernel
-        processImageWithCUDA(frame, processed_frame);
+        processImageWithCUDA(frame, processed_frame, threshold_value);
 
         // Add FPS text to original frame
         putText(frame, "FPS: " + to_string(int(fps + 0.5f)), Point(10, 30), 
